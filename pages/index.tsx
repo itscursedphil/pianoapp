@@ -131,11 +131,11 @@ const HomePage: NextPage = () => {
                 style={{ textTransform: 'uppercase' }}
                 mb={1}
               >
-                Scale:
+                Root:
               </Text>
-              <SkeletonButton type="button" onClick={toggleShowScales}>
+              <SkeletonButton type="button" onClick={toggleShowNotes}>
                 <Text inline fontSize="1.2rem">
-                  <strong>{scale?.name}</strong>
+                  <strong>{noteNames[root]}</strong>
                 </Text>
               </SkeletonButton>
             </Box>
@@ -151,11 +151,11 @@ const HomePage: NextPage = () => {
                 style={{ textTransform: 'uppercase' }}
                 mb={1}
               >
-                Root:
+                Scale:
               </Text>
-              <SkeletonButton type="button" onClick={toggleShowNotes}>
+              <SkeletonButton type="button" onClick={toggleShowScales}>
                 <Text inline fontSize="1.2rem">
-                  <strong>{noteNames[root]}</strong>
+                  <strong>{scale?.name}</strong>
                 </Text>
               </SkeletonButton>
             </Box>
