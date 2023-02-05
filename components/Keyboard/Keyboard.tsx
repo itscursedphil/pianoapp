@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback } from 'react';
 import styled from 'styled-components';
 import * as Tone from 'tone';
 
 import { noteNames, NOTES_IN_OCTAVE, sharpNotes } from '../../lib/notes';
 import { ScaleDefinition } from '../../lib/scales';
+import { useSynth } from '../../lib/synth';
 import Box from '../Box';
 import Key from './Key';
 
@@ -26,15 +27,7 @@ const Keyboard: React.FC<KeyboardProps> = ({
   root = 0,
   offset = 0,
 }) => {
-  const [initialized, setInitialized] = useState(false);
-
-  const synthRef = useRef<Tone.Synth | null>(null);
-
-  useEffect(() => {
-    const synth = new Tone.Synth().toDestination();
-
-    synthRef.current = synth;
-  }, []);
+  const [synth, { initialize: initializeSynth }] = useSynth();
 
   const notes = Array(keys)
     .fill(0)
@@ -43,23 +36,14 @@ const Keyboard: React.FC<KeyboardProps> = ({
 
   const handleKeyPress = useCallback(
     async (noteName: string, octave: number) => {
-      if (!initialized) {
-        await await Tone.start();
-        setInitialized(true);
-      }
+      await initializeSynth();
 
-      if (synthRef.current) {
-        const noteVal = noteName;
-        const now = Tone.now();
+      const noteVal = noteName;
+      const now = Tone.now();
 
-        synthRef.current.triggerAttackRelease(
-          `${noteVal}${4 + octave}`,
-          '8n',
-          now
-        );
-      }
+      synth.triggerAttackRelease(`${noteVal}${4 + octave}`, '8n', now);
     },
-    [initialized]
+    [initializeSynth, synth]
   );
 
   return (
