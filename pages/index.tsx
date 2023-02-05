@@ -1,22 +1,24 @@
 import React, { useCallback, useState } from 'react';
 import { NextPage } from 'next';
 import Head from 'next/head';
+import * as Tone from 'tone';
 
 import Box from '../components/Box';
 import { SkeletonButton } from '../components/Button';
 import Keyboard from '../components/Keyboard';
 import Layout from '../components/Layout';
 import Text from '../components/Text';
-import { noteNames } from '../lib/notes';
+import { noteNames, NOTES_IN_OCTAVE } from '../lib/notes';
 import scales, { ScaleDefinition } from '../lib/scales';
+import { useSynth } from '../lib/synth';
 
 const ScaleSelection: React.FC<{
   selectedScale: ScaleDefinition;
   onSelect: (name: string) => void;
 }> = ({ selectedScale, onSelect }) => (
-  <Box display="flex" mt={-3} mb={4} flexWrap="wrap">
+  <Box display="flex" flexWrap="wrap" mb={-2}>
     {scales.map(({ name }) => (
-      <Box mr={4} mb={2}>
+      <Box mr={4} mb={2} key={name}>
         <SkeletonButton type="button" onClick={() => onSelect(name)}>
           <Text
             inline
@@ -35,9 +37,9 @@ const RootSelection: React.FC<{
   selectedRoot: number;
   onSelect: (index: number) => void;
 }> = ({ selectedRoot, onSelect }) => (
-  <Box display="flex" mt={-3} mb={4} flexWrap="wrap">
+  <Box display="flex" mb={-2} flexWrap="wrap">
     {noteNames.map((noteName, index) => (
-      <Box mr={4} mb={2}>
+      <Box mr={4} mb={2} key={noteName}>
         <SkeletonButton type="button" onClick={() => onSelect(index)}>
           <Text
             inline
@@ -57,6 +59,10 @@ const HomePage: NextPage = () => {
   const [root, setRoot] = useState(0);
   const [showScales, setShowScales] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
+
+  const [synth, { initialize }] = useSynth();
+
+  const keyboardOffset = -7;
 
   const toggleShowScales = useCallback(() => {
     const nextShowScales = !showScales;
@@ -78,6 +84,25 @@ const HomePage: NextPage = () => {
     }
   }, [showNotes]);
 
+  const handlePlayClick = useCallback(async () => {
+    await initialize();
+
+    const now = Tone.now();
+
+    [...scale.notes, scale.notes[0] + NOTES_IN_OCTAVE].forEach(
+      (note, index) => {
+        const noteName = noteNames[(note + root) % NOTES_IN_OCTAVE];
+        const octave = 4 + Math.floor((note + root) / NOTES_IN_OCTAVE);
+
+        synth.triggerAttackRelease(
+          `${noteName}${octave}`,
+          '8n',
+          now + 0.25 * index
+        );
+      }
+    );
+  }, [initialize, root, scale.notes, synth]);
+
   return (
     <Layout>
       <Head>
@@ -93,39 +118,79 @@ const HomePage: NextPage = () => {
       </header>
       <main>
         <Box>
-          <Box display="flex" mb={4}>
-            <Text inline mr={4} fontSize={['1rem', '1.2rem']}>
-              Scale:{' '}
+          <Box display="flex" mb={2} alignItems="flex-end">
+            <Box
+              display="flex"
+              flexDirection="column"
+              alignItems="flex-start"
+              mr={4}
+            >
+              <Text
+                inline
+                fontSize="0.8rem"
+                style={{ textTransform: 'uppercase' }}
+                mb={1}
+              >
+                Scale:
+              </Text>
               <SkeletonButton type="button" onClick={toggleShowScales}>
                 <Text inline fontSize="1.2rem">
                   <strong>{scale?.name}</strong>
                 </Text>
               </SkeletonButton>
-            </Text>
-            <Text inline fontSize={['1rem', '1.2rem']}>
-              Root:{' '}
+            </Box>
+            <Box
+              display="flex"
+              flexDirection="column"
+              alignItems="flex-start"
+              mr={4}
+            >
+              <Text
+                inline
+                fontSize="0.8rem"
+                style={{ textTransform: 'uppercase' }}
+                mb={1}
+              >
+                Root:
+              </Text>
               <SkeletonButton type="button" onClick={toggleShowNotes}>
                 <Text inline fontSize="1.2rem">
                   <strong>{noteNames[root]}</strong>
                 </Text>
               </SkeletonButton>
-            </Text>
+            </Box>
+            <Box>
+              <SkeletonButton type="button" onClick={handlePlayClick}>
+                <Text inline fontSize="1.2rem">
+                  <strong>Play</strong>
+                </Text>
+              </SkeletonButton>
+            </Box>
           </Box>
           {showScales && (
-            <ScaleSelection
-              selectedScale={scale}
-              onSelect={(name) =>
-                setScale(scales.find((s) => s.name === name) || scales[0])
-              }
-            />
+            <Box mb={3}>
+              <ScaleSelection
+                selectedScale={scale}
+                onSelect={(name) =>
+                  setScale(scales.find((s) => s.name === name) || scales[0])
+                }
+              />
+            </Box>
           )}
           {showNotes && (
-            <RootSelection
-              selectedRoot={root}
-              onSelect={(index) => setRoot(index)}
-            />
+            <Box mb={3}>
+              <RootSelection
+                selectedRoot={root}
+                onSelect={(index) => setRoot(index)}
+              />
+            </Box>
           )}
-          <Keyboard keys={24} root={root} offset={-7} scale={scale} />
+          <Keyboard
+            keys={24}
+            root={root}
+            offset={keyboardOffset}
+            scale={scale}
+          />
         </Box>
       </main>
     </Layout>

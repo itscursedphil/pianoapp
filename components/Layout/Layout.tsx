@@ -4,6 +4,7 @@ import { Sen } from '@next/font/google';
 import styled from 'styled-components';
 import { space } from 'styled-system';
 
+// Alternatives: DM Sans, Poppins, Jost, Hanken Grotesk, Inter, Work Sans
 const font = Sen({ subsets: ['latin'], weight: ['400', '700'] });
 
 const PageWrapper = styled.div`
