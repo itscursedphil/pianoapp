@@ -118,7 +118,7 @@ const HomePage: NextPage = () => {
       </header>
       <main>
         <Box>
-          <Box display="flex" mb={2} alignItems="flex-end">
+          <Box display="flex" mb={2} alignItems="flex-start">
             <Box
               display="flex"
               flexDirection="column"
@@ -159,7 +159,7 @@ const HomePage: NextPage = () => {
                 </Text>
               </SkeletonButton>
             </Box>
-            <Box>
+            <Box pt="1.2rem">
               <SkeletonButton type="button" onClick={handlePlayClick}>
                 <Text inline fontSize="1.2rem">
                   <strong>Play</strong>
