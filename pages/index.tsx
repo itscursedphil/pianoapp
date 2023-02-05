@@ -1,14 +1,82 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { NextPage } from 'next';
 import Head from 'next/head';
 
+import Box from '../components/Box';
+import { SkeletonButton } from '../components/Button';
 import Keyboard from '../components/Keyboard';
 import Layout from '../components/Layout';
+import Text from '../components/Text';
+import { noteNames } from '../lib/notes';
 import scales, { ScaleDefinition } from '../lib/scales';
 
+const ScaleSelection: React.FC<{
+  selectedScale: ScaleDefinition;
+  onSelect: (name: string) => void;
+}> = ({ selectedScale, onSelect }) => (
+  <Box display="flex" mt={-3} mb={4} flexWrap="wrap">
+    {scales.map(({ name }) => (
+      <Box mr={4} mb={2}>
+        <SkeletonButton type="button" onClick={() => onSelect(name)}>
+          <Text
+            inline
+            fontSize="1.2rem"
+            style={{ opacity: selectedScale?.name === name ? 1 : 0.4 }}
+          >
+            <strong>{name}</strong>
+          </Text>
+        </SkeletonButton>
+      </Box>
+    ))}
+  </Box>
+);
+
+const RootSelection: React.FC<{
+  selectedRoot: number;
+  onSelect: (index: number) => void;
+}> = ({ selectedRoot, onSelect }) => (
+  <Box display="flex" mt={-3} mb={4} flexWrap="wrap">
+    {noteNames.map((noteName, index) => (
+      <Box mr={4} mb={2}>
+        <SkeletonButton type="button" onClick={() => onSelect(index)}>
+          <Text
+            inline
+            fontSize="1.2rem"
+            style={{ opacity: selectedRoot === index ? 1 : 0.4 }}
+          >
+            <strong>{noteName}</strong>
+          </Text>
+        </SkeletonButton>
+      </Box>
+    ))}
+  </Box>
+);
+
 const HomePage: NextPage = () => {
-  const [scale, setScale] = useState<ScaleDefinition | null>(scales[1]);
-  const [root, setRoot] = useState(3);
+  const [scale, setScale] = useState<ScaleDefinition>(scales[0]);
+  const [root, setRoot] = useState(0);
+  const [showScales, setShowScales] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
+
+  const toggleShowScales = useCallback(() => {
+    const nextShowScales = !showScales;
+
+    setShowScales(nextShowScales);
+
+    if (nextShowScales) {
+      setShowNotes(false);
+    }
+  }, [showScales]);
+
+  const toggleShowNotes = useCallback(() => {
+    const nextShowNotes = !showNotes;
+
+    setShowNotes(nextShowNotes);
+
+    if (nextShowNotes) {
+      setShowScales(false);
+    }
+  }, [showNotes]);
 
   return (
     <Layout>
@@ -19,10 +87,46 @@ const HomePage: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <header>
-        <h1>Pianoapp</h1>
+        <Box my={5}>
+          <h1>Pianoapp</h1>
+        </Box>
       </header>
       <main>
-        <Keyboard keys={24} root={root} offset={-7} scale={scale} />
+        <Box>
+          <Box display="flex" mb={4}>
+            <Text inline mr={4} fontSize={['1rem', '1.2rem']}>
+              Scale:{' '}
+              <SkeletonButton type="button" onClick={toggleShowScales}>
+                <Text inline fontSize="1.2rem">
+                  <strong>{scale?.name}</strong>
+                </Text>
+              </SkeletonButton>
+            </Text>
+            <Text inline fontSize={['1rem', '1.2rem']}>
+              Root:{' '}
+              <SkeletonButton type="button" onClick={toggleShowNotes}>
+                <Text inline fontSize="1.2rem">
+                  <strong>{noteNames[root]}</strong>
+                </Text>
+              </SkeletonButton>
+            </Text>
+          </Box>
+          {showScales && (
+            <ScaleSelection
+              selectedScale={scale}
+              onSelect={(name) =>
+                setScale(scales.find((s) => s.name === name) || scales[0])
+              }
+            />
+          )}
+          {showNotes && (
+            <RootSelection
+              selectedRoot={root}
+              onSelect={(index) => setRoot(index)}
+            />
+          )}
+          <Keyboard keys={24} root={root} offset={-7} scale={scale} />
+        </Box>
       </main>
     </Layout>
   );
